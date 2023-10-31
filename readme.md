@@ -5,3 +5,6 @@ The use-case is infrequently updating messages to passers-by, info tags for art,
 ## Hardware
 https://www.aliexpress.us/item/3256805623572150.html
 https://www.aliexpress.us/item/3256804935498922.html
+
+## Additional software
+https://github.com/lagunax/ESP32-upng - get the .h and .cpp, and add them to the sketch dir.  TBD if I'm going to use those libraries "in prod"

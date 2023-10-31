@@ -7,9 +7,16 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+/*
+wifi.h has my creds and web server.  Configure it like:
+
+const char* ssid = "SSID";
+const char* password = "WPA2-key";
+const String server = "http://localhost:8090";
+*/
 #include "wifi.h"
 
-#include "upng.h"
+#include "upng.h" // https://github.com/lagunax/ESP32-upng TODO fix licensing messages
 
 //Your Domain name with URL path or IP address with path
 String blackImage = server + "/static/go-black3.png";

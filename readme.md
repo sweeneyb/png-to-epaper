@@ -8,3 +8,13 @@ https://www.aliexpress.us/item/3256804935498922.html
 
 ## Additional software
 https://github.com/lagunax/ESP32-upng - get the .h and .cpp, and add them to the sketch dir.  TBD if I'm going to use those libraries "in prod"
+
+## Image gen
+I'm using golang or python to generate the images, and currently passing them through imagemagick.
+
+For testing:
+```convert go-black3.png go-black.xbm```
+
+Currently, to reduce the bit depth:
+```convert go-black3.png -colors 2 -depth 1 go-black-reduced3.png```
+todo: figure out how to create low bit depth greyscale pngs in a programming language that can handle fonts.

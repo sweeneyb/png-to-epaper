@@ -20,7 +20,7 @@ const String server = "http://localhost:8090";
 
 //Your Domain name with URL path or IP address with path
 // String blackImage = server + "/static/go-black3.png";
-String blackImage = server + "/static/go-black-reduced2.png";
+String blackImage = server + "/static/go-black-reduced3.png";
 // String blackImage = server + "/static/test.txt";
 String redImage = server + "/red.bmp";
 
@@ -39,6 +39,7 @@ const int kNetworkDelay = 1000;
 String sensorReadingsArr[5];
 //Create a new image cache named IMAGE_BW and fill it with white
 UBYTE *BlackImage, *RYImage;
+UWORD Imagesize = ((EPD_7IN5B_V2_WIDTH % 8 == 0) ? (EPD_7IN5B_V2_WIDTH / 8 ) : (EPD_7IN5B_V2_WIDTH / 8 + 1)) * EPD_7IN5B_V2_HEIGHT;
 
 UBYTE *blackHttp, *redHttp;
 
@@ -74,25 +75,24 @@ void setup()
 
 
 
-  // UWORD Imagesize = ((EPD_7IN5B_V2_WIDTH % 8 == 0) ? (EPD_7IN5B_V2_WIDTH / 8 ) : (EPD_7IN5B_V2_WIDTH / 8 + 1)) * EPD_7IN5B_V2_HEIGHT;
+
   // if ((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
   //   printf("Failed to apply for black memory...\r\n");
   //   while(1);
   // }
-  // if ((RYImage = (UBYTE *)malloc(Imagesize)) == NULL) {
-  //   printf("Failed to apply for red memory...\r\n");
-  //   while(1);
-  // }
+  if ((RYImage = (UBYTE *)malloc(Imagesize)) == NULL) {
+    printf("Failed to apply for red memory...\r\n");
+    while(1);
+  }
   // printf("NewImage:BlackImage and RYImage\r\n");
   // Paint_NewImage(BlackImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
-  // Paint_NewImage(RYImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
+  Paint_NewImage(RYImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
 
   // //Select Image
   // Paint_SelectImage(BlackImage);
   // Paint_Clear(WHITE);
   // Paint_SelectImage(RYImage);
   // Paint_Clear(WHITE);
-
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -148,7 +148,7 @@ UBYTE* readData(HTTPClient *http, UBYTE* data, int contentLength){
 char c2h(char c)
 {  return "0123456789ABCDEF"[0x0F & (unsigned char)c];
 }
-
+  
 /* The main loop -------------------------------------------------------------*/
 void loop()
 {
@@ -219,7 +219,24 @@ void loop()
         upng_decode(upng);
         if (upng_get_error(upng) == UPNG_EOK) {
           Serial.println("UPNG_EOK");
-            // Get pointer to bitmap buffer.
+          
+          Serial.print("width: ");
+          Serial.println(upng_get_width(upng));
+          Serial.print("height: ");
+          Serial.println(upng_get_height(upng));
+
+          Serial.print("epaper size calc: ");
+          Serial.println(Imagesize);
+
+          Serial.print("upng size calc: ");
+          Serial.println(upng_get_size(upng));
+
+          Serial.print("pixel size: ");
+          Serial.println(upng_get_pixelsize(upng));
+          
+
+
+
           const uint8_t *bitmap = upng_get_buffer(upng);
 
         } else {
@@ -227,8 +244,12 @@ void loop()
           Serial.println(upng_get_error(upng));
         }
         if(doUpdate) {
+          Serial.println("Painting...");
           // Paint_NewImage(upng_get_buffer(upng), EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
-          Paint_SelectImage((uint8_t*)upng_get_buffer(upng)); // this cast is platform-specific
+          EPD_7IN5B_V2_Clear();
+          DEV_Delay_ms(500);
+          
+          EPD_7IN5B_V2_Display(upng_get_buffer(upng), RYImage);
         }
         upng_free(upng);
       }

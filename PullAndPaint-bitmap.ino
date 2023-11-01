@@ -214,46 +214,45 @@ void loop()
       Serial.println("heap avail: ");
       size_t available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
       Serial.println(available);
-      upng_t* upng;
-      upng = upng_new_from_bytes(imageData, imageLength);
-      if (upng != NULL) {
+      if (doUpdate) {
+        upng_t* upng;
+        upng = upng_new_from_bytes(imageData, imageLength);
+        if (upng != NULL) {
           // Decode PNG image.
-        upng_decode(upng);
-        if (upng_get_error(upng) == UPNG_EOK) {
-          Serial.println("UPNG_EOK");
+          upng_decode(upng);
+          if (upng_get_error(upng) == UPNG_EOK) {
+           Serial.println("UPNG_EOK");
           
-          Serial.print("width: ");
-          Serial.println(upng_get_width(upng));
-          Serial.print("height: ");
-          Serial.println(upng_get_height(upng));
+            Serial.print("width: ");
+            Serial.println(upng_get_width(upng));
+            Serial.print("height: ");
+            Serial.println(upng_get_height(upng));
 
-          Serial.print("epaper size calc: ");
-          Serial.println(Imagesize);
+            Serial.print("epaper size calc: ");
+            Serial.println(Imagesize);
 
-          Serial.print("upng size calc: ");
-          Serial.println(upng_get_size(upng));
+            Serial.print("upng size calc: ");
+            Serial.println(upng_get_size(upng));
 
-          Serial.print("pixel size: ");
-          Serial.println(upng_get_pixelsize(upng));
-          
+            Serial.print("pixel size: ");
+            Serial.println(upng_get_pixelsize(upng));
 
+            const uint8_t *bitmap = upng_get_buffer(upng);
 
+          } else {
+            Serial.print("upng_get_error: ");
+            Serial.println(upng_get_error(upng));
+            ESP.restart();
+          }
 
-          const uint8_t *bitmap = upng_get_buffer(upng);
-
-        } else {
-          Serial.print("upng_get_error: ");
-          Serial.println(upng_get_error(upng));
-        }
-        if(doUpdate) {
           Serial.println("Painting...");
           // Paint_NewImage(upng_get_buffer(upng), EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
           EPD_7IN5B_V2_Clear();
-          DEV_Delay_ms(500);
-          
           EPD_7IN5B_V2_Display(upng_get_buffer(upng), RYImage);
-        }
+        
         upng_free(upng);
+        free(imageData);
+      }
       }
     }
     else {

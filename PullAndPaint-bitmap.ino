@@ -87,6 +87,8 @@ void setup()
   // printf("NewImage:BlackImage and RYImage\r\n");
   // Paint_NewImage(BlackImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
   Paint_NewImage(RYImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
+  Paint_SelectImage(RYImage);
+  Paint_Clear(WHITE);
 
   // //Select Image
   // Paint_SelectImage(BlackImage);

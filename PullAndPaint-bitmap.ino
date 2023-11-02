@@ -22,8 +22,8 @@ const String server = "http://localhost:8090";
 //Your Domain name with URL path or IP address with path
 // String blackImage = server + "/static/go-black3.png";
 String blackImage = server + "/static/go-black-reduced3.png";
-// String blackImage = server + "/static/test.txt";
-String redImage = server + "/red.bmp";
+String redImage = server + "/static/go-red-reduced3.png";
+
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
@@ -31,7 +31,7 @@ unsigned long lastTime = 0;
 // Timer set to 10 minutes (600000)
 //unsigned long timerDelay = 600000;
 // Set timer to 5 seconds (5000)
-unsigned long timerDelay = 5000;
+unsigned long timerDelay = 8000;
 
 // Number of milliseconds to wait without receiving any data before we give up
 const int kNetworkTimeout = 30*1000;
@@ -141,24 +141,21 @@ void updateImageIfNeeded(String url, imageData* imageDataStruct  ) {
   int httpResponseCode = http.GET();
   Serial.print("status code: ");
   Serial.println(httpResponseCode);
-  UBYTE* imageData;
-  int imageLength;
-  bool doUpdate = false;
   if (httpResponseCode == 200) {
-    doUpdate = true;
+    imageDataStruct->isUpdated = true;
     Serial.println("would re-render");
     modifiedSince = http.header("Last-Modified");
     String contentLength = http.header("Content-Length");
     Serial.print("content length: ");
     Serial.println(contentLength);
-    imageLength = contentLength.toInt();
-    imageData = new unsigned char[imageLength];
-    for (int i = 0; i< imageLength;i++) {
-      imageData[i] = 0;
+    imageDataStruct->length = contentLength.toInt();
+    imageDataStruct->data = new unsigned char[imageDataStruct->length];
+    for (int i = 0; i< imageDataStruct->length;i++) {
+      imageDataStruct->data[i] = 0;
     }
-    readData(&http, imageData, imageLength);    
-    for (int i = 0; i < imageLength; i++) {
-      Serial.print(imageData[i], HEX);
+    readData(&http, imageDataStruct->data, imageDataStruct->length);    
+    for (int i = 0; i < imageDataStruct->length; i++) {
+      Serial.print(imageDataStruct->data[i], HEX);
       Serial.print(' '); // Add a space to separate the values
     }
   }
@@ -178,93 +175,116 @@ void loop()
 
     //Check WiFi connection status
     if(WiFi.status()== WL_CONNECTED){
-      HTTPClient http;
-
-      String serverPath = blackImage;
-
-
       struct ImageData blackImageData;
-      updateImageIfNeeded(serverPath, &blackImageData );
-      
-      // Your Domain name with URL path or IP address with path
-      http.begin(serverPath.c_str());
-      http.addHeader("If-Modified-Since", modifiedSince );
-      http.collectHeaders(headerKeys, numberOfHeaders);
-      int httpResponseCode = http.GET();
-      Serial.print("status code: ");
-      Serial.println(httpResponseCode);
-      
-      for(int i = 0; i< http.headers(); i++){
-          Serial.println(http.header(i));
+      blackImageData.isUpdated = false;
+      updateImageIfNeeded(blackImage, &blackImageData );
+
+      if(blackImageData.isUpdated) {
+        for (int i = 0; i < blackImageData.length; i++) {
+          Serial.print(blackImageData.data[i], HEX);
+          Serial.print(' '); // Add a space to separate the values
+        }
       }
-      UBYTE* imageData;
-      int imageLength;
-      bool doUpdate = false;
-      if (httpResponseCode == 200) {
-        doUpdate = true;
-        Serial.println("would re-render");
-        modifiedSince = http.header("Last-Modified");
-        String contentLength = http.header("Content-Length");
-        Serial.print("content length:");
-        Serial.println(contentLength);
-        imageLength = contentLength.toInt();
-        imageData = new unsigned char[imageLength];
-        for (int i = 0; i< imageLength;i++) {
-          imageData[i] = 0;
-        }
-        readData(&http, imageData, imageLength);
 
+      struct ImageData redImageData;
+      redImageData.isUpdated = false;
+      updateImageIfNeeded(redImage, &redImageData );
 
-        unsigned char dataArray[] = {0x12, 0x34, 0xAB, 0xCD};
-        for (int i = 0; i < sizeof(dataArray); i++) {
-          Serial.print(dataArray[i], HEX);
+      if(redImageData.isUpdated) {
+        for (int i = 0; i < redImageData.length; i++) {
+          Serial.print(redImageData.data[i], HEX);
           Serial.print(' '); // Add a space to separate the values
         }
-        for (int i = 0; i < imageLength; i++) {
-          Serial.print(imageData[i], HEX);
-          Serial.print(' '); // Add a space to separate the values
-        }
-        Serial.println(' ');
-        // for (int i =0;i<imageLength;i++) {
-        //   // Serial.write(c2h(imageData[i]));
+      }
+
+      // do png work here
+
+      if(blackImageData.isUpdated) {
+        free(blackImageData.data);
+      }
+      if(redImageData.isUpdated) {
+        free(redImageData.data);
+      }
+      
+      // // Your Domain name with URL path or IP address with path
+      // http.begin(serverPath.c_str());
+      // http.addHeader("If-Modified-Since", modifiedSince );
+      // http.collectHeaders(headerKeys, numberOfHeaders);
+      // int httpResponseCode = http.GET();
+      // Serial.print("status code: ");
+      // Serial.println(httpResponseCode);
+      
+      // for(int i = 0; i< http.headers(); i++){
+      //     Serial.println(http.header(i));
+      // }
+      // UBYTE* imageData;
+      // int imageLength;
+      // bool doUpdate = false;
+      // if (httpResponseCode == 200) {
+      //   doUpdate = true;
+      //   Serial.println("would re-render");
+      //   modifiedSince = http.header("Last-Modified");
+      //   String contentLength = http.header("Content-Length");
+      //   Serial.print("content length:");
+      //   Serial.println(contentLength);
+      //   imageLength = contentLength.toInt();
+      //   imageData = new unsigned char[imageLength];
+      //   for (int i = 0; i< imageLength;i++) {
+      //     imageData[i] = 0;
+      //   }
+      //   readData(&http, imageData, imageLength);
+
+
+      //   unsigned char dataArray[] = {0x12, 0x34, 0xAB, 0xCD};
+      //   for (int i = 0; i < sizeof(dataArray); i++) {
+      //     Serial.print(dataArray[i], HEX);
+      //     Serial.print(' '); // Add a space to separate the values
+      //   }
+      //   for (int i = 0; i < imageLength; i++) {
+      //     Serial.print(imageData[i], HEX);
+      //     Serial.print(' '); // Add a space to separate the values
+      //   }
+      //   Serial.println(' ');
+      //   // for (int i =0;i<imageLength;i++) {
+      //   //   // Serial.write(c2h(imageData[i]));
 
           
-        // }
-      }
-      // Free resources
-      http.end();
+      //   // }
+      // }
+      // // Free resources
+      // http.end();
 
       Serial.println("heap avail: ");
       size_t available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
       Serial.println(available);
-      if (doUpdate) {
-        upng_t* upng;
-        upng = upng_new_from_bytes(imageData, imageLength);
-        if (upng != NULL) {
-          // Decode PNG image.
-          upng_decode(upng);
-          if (upng_get_error(upng) == UPNG_EOK) {
-            Serial.println("UPNG_EOK");
+      // if (doUpdate) {
+      //   upng_t* upng;
+      //   upng = upng_new_from_bytes(imageData, imageLength);
+      //   if (upng != NULL) {
+      //     // Decode PNG image.
+      //     upng_decode(upng);
+      //     if (upng_get_error(upng) == UPNG_EOK) {
+      //       Serial.println("UPNG_EOK");
           
-            debugImageSize(upng);
+      //       debugImageSize(upng);
 
-            const uint8_t *bitmap = upng_get_buffer(upng);
+      //       const uint8_t *bitmap = upng_get_buffer(upng);
 
-          } else {
-            Serial.print("upng_get_error: ");
-            Serial.println(upng_get_error(upng));
-            ESP.restart();
-          }
+      //     } else {
+      //       Serial.print("upng_get_error: ");
+      //       Serial.println(upng_get_error(upng));
+      //       ESP.restart();
+      //     }
 
-          Serial.println("Painting...");
-          // Paint_NewImage(upng_get_buffer(upng), EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
-          EPD_7IN5B_V2_Clear();
-          EPD_7IN5B_V2_Display(upng_get_buffer(upng), RYImage);
+      //     Serial.println("Painting...");
+      //     // Paint_NewImage(upng_get_buffer(upng), EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
+      //     EPD_7IN5B_V2_Clear();
+      //     EPD_7IN5B_V2_Display(upng_get_buffer(upng), RYImage);
         
-        upng_free(upng);
-        free(imageData);
-      }
-      }
+      //   upng_free(upng);
+      //   free(imageData);
+      // }
+      // }
     }
     else {
       Serial.println("WiFi Disconnected");

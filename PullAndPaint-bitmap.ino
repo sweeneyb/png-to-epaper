@@ -43,23 +43,17 @@ UWORD Imagesize = ((EPD_7IN5B_V2_WIDTH % 8 == 0) ? (EPD_7IN5B_V2_WIDTH / 8 ) : (
 
 UBYTE *blackHttp, *redHttp;
 
-String artist = "";
-String work = "";
-
-
-
-String unquote(String inputString) {
-  String result = "";
-  
-  for (int i = 0; i < inputString.length(); i++) {
-    char currentChar = inputString.charAt(i);
-    
-    if (currentChar != '"') {
-      result += currentChar;
-    }
-  }
-  
-  return result;
+void debugImageSize(upng_t* upng) {
+  Serial.print("width: ");
+  Serial.println(upng_get_width(upng));
+  Serial.print("height: ");
+  Serial.println(upng_get_height(upng));
+  Serial.print("epaper size calc: ");
+  Serial.println(Imagesize);
+  Serial.print("upng size calc: ");
+  Serial.println(upng_get_size(upng));
+  Serial.print("pixel size: ");
+  Serial.println(upng_get_pixelsize(upng));
 }
 
 /* Entry point ----------------------------------------------------------------*/
@@ -70,11 +64,6 @@ void setup()
 
   printf("e-Paper Init and Clear...\r\n");
   EPD_7IN5B_V2_Init();
-  // EPD_7IN5B_V2_Clear();
-  // DEV_Delay_ms(500);
-
-
-
 
   // if ((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
   //   printf("Failed to apply for black memory...\r\n");
@@ -84,17 +73,9 @@ void setup()
     printf("Failed to apply for red memory...\r\n");
     while(1);
   }
-  // printf("NewImage:BlackImage and RYImage\r\n");
-  // Paint_NewImage(BlackImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
   Paint_NewImage(RYImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
   Paint_SelectImage(RYImage);
   Paint_Clear(WHITE);
-
-  // //Select Image
-  // Paint_SelectImage(BlackImage);
-  // Paint_Clear(WHITE);
-  // Paint_SelectImage(RYImage);
-  // Paint_Clear(WHITE);
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -147,10 +128,7 @@ UBYTE* readData(HTTPClient *http, UBYTE* data, int contentLength){
   return data;
 }
 
-char c2h(char c)
-{  return "0123456789ABCDEF"[0x0F & (unsigned char)c];
-}
-  
+
 /* The main loop -------------------------------------------------------------*/
 void loop()
 {
@@ -221,21 +199,9 @@ void loop()
           // Decode PNG image.
           upng_decode(upng);
           if (upng_get_error(upng) == UPNG_EOK) {
-           Serial.println("UPNG_EOK");
+            Serial.println("UPNG_EOK");
           
-            Serial.print("width: ");
-            Serial.println(upng_get_width(upng));
-            Serial.print("height: ");
-            Serial.println(upng_get_height(upng));
-
-            Serial.print("epaper size calc: ");
-            Serial.println(Imagesize);
-
-            Serial.print("upng size calc: ");
-            Serial.println(upng_get_size(upng));
-
-            Serial.print("pixel size: ");
-            Serial.println(upng_get_pixelsize(upng));
+            debugImageSize(upng);
 
             const uint8_t *bitmap = upng_get_buffer(upng);
 

@@ -17,6 +17,7 @@ const String server = "http://localhost:8090";
 #include "wifi.h"
 
 #include "upng.h" // https://github.com/lagunax/ESP32-upng TODO fix licensing messages
+#include "types.h"
 
 //Your Domain name with URL path or IP address with path
 // String blackImage = server + "/static/go-black3.png";
@@ -129,6 +130,46 @@ UBYTE* readData(HTTPClient *http, UBYTE* data, int contentLength){
 }
 
 
+
+void updateImageIfNeeded(String url, imageData* imageDataStruct  ) {
+  Serial.print("start fetch of ");
+  Serial.println(url);
+  HTTPClient http;
+  http.begin(url.c_str());
+  http.addHeader("If-Modified-Since", modifiedSince );
+  http.collectHeaders(headerKeys, numberOfHeaders);
+  int httpResponseCode = http.GET();
+  Serial.print("status code: ");
+  Serial.println(httpResponseCode);
+  UBYTE* imageData;
+  int imageLength;
+  bool doUpdate = false;
+  if (httpResponseCode == 200) {
+    doUpdate = true;
+    Serial.println("would re-render");
+    modifiedSince = http.header("Last-Modified");
+    String contentLength = http.header("Content-Length");
+    Serial.print("content length: ");
+    Serial.println(contentLength);
+    imageLength = contentLength.toInt();
+    imageData = new unsigned char[imageLength];
+    for (int i = 0; i< imageLength;i++) {
+      imageData[i] = 0;
+    }
+    readData(&http, imageData, imageLength);    
+    for (int i = 0; i < imageLength; i++) {
+      Serial.print(imageData[i], HEX);
+      Serial.print(' '); // Add a space to separate the values
+    }
+  }
+  http.end();
+  Serial.print("end fetch of ");
+  Serial.println(url);
+}
+
+
+
+
 /* The main loop -------------------------------------------------------------*/
 void loop()
 {
@@ -140,6 +181,10 @@ void loop()
       HTTPClient http;
 
       String serverPath = blackImage;
+
+
+      struct ImageData blackImageData;
+      updateImageIfNeeded(serverPath, &blackImageData );
       
       // Your Domain name with URL path or IP address with path
       http.begin(serverPath.c_str());

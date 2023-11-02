@@ -70,13 +70,13 @@ void setup()
   //   printf("Failed to apply for black memory...\r\n");
   //   while(1);
   // }
-  if ((RYImage = (UBYTE *)malloc(Imagesize)) == NULL) {
-    printf("Failed to apply for red memory...\r\n");
-    while(1);
-  }
-  Paint_NewImage(RYImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
-  Paint_SelectImage(RYImage);
-  Paint_Clear(WHITE);
+  // if ((RYImage = (UBYTE *)malloc(Imagesize)) == NULL) {
+  //   printf("Failed to apply for red memory...\r\n");
+  //   while(1);
+  // }
+  // Paint_NewImage(RYImage, EPD_7IN5B_V2_WIDTH, EPD_7IN5B_V2_HEIGHT , 0, WHITE);
+  // Paint_SelectImage(RYImage);
+  // Paint_Clear(WHITE);
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -154,109 +154,113 @@ void updateImageIfNeeded(String url, imageData* imageDataStruct  ) {
       imageDataStruct->data[i] = 0;
     }
     readData(&http, imageDataStruct->data, imageDataStruct->length);    
-    for (int i = 0; i < imageDataStruct->length; i++) {
-      Serial.print(imageDataStruct->data[i], HEX);
-      Serial.print(' '); // Add a space to separate the values
-    }
+    // for (int i = 0; i < imageDataStruct->length; i++) {
+    //   Serial.print(imageDataStruct->data[i], HEX);
+    //   Serial.print(' '); // Add a space to separate the values
+    // }
+    // Serial.println(' ');
   }
   http.end();
   Serial.print("end fetch of ");
   Serial.println(url);
 }
 
+upng_t* blackUpng;
+upng_t* redUpng;
 
-
+const unsigned char* blk;
+const unsigned char* rd;
 
 /* The main loop -------------------------------------------------------------*/
 void loop()
 {
   //Send an HTTP POST request every 1 minutes
   if ((millis() - lastTime) > timerDelay) {
-
+    Serial.println("heap avail at top: ");
+    size_t available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    Serial.println(available);
     //Check WiFi connection status
     if(WiFi.status()== WL_CONNECTED){
       struct ImageData blackImageData;
       blackImageData.isUpdated = false;
       updateImageIfNeeded(blackImage, &blackImageData );
 
+      // if(blackImageData.isUpdated) {
+      //   for (int i = 0; i < blackImageData.length; i++) {
+      //     Serial.print(blackImageData.data[i], HEX);
+      //     Serial.print(' '); // Add a space to separate the values
+      //   }
+      // }
+      
       if(blackImageData.isUpdated) {
-        for (int i = 0; i < blackImageData.length; i++) {
-          Serial.print(blackImageData.data[i], HEX);
-          Serial.print(' '); // Add a space to separate the values
+        blackUpng = upng_new_from_bytes(blackImageData.data, blackImageData.length);
+        if (blackUpng != NULL) {
+          // Decode PNG image.
+          upng_decode(blackUpng);
+          if (upng_get_error(blackUpng) == UPNG_EOK) {
+            Serial.println("UPNG_EOK");
+
+            // debugImageSize(upng); 
+            // const uint8_t *bitmap = upng_get_buffer(upng);  
+          } else {
+            Serial.print("upng_get_error: ");
+            Serial.println(upng_get_error(blackUpng));
+            ESP.restart();
+          }
         }
+        free(blackImageData.data);
+        blk = upng_get_buffer(blackUpng);
+        // upng_free(blackUpng);
       }
+
+      Serial.println("heap avail between: ");
+      available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+      Serial.println(available);
 
       struct ImageData redImageData;
       redImageData.isUpdated = false;
       updateImageIfNeeded(redImage, &redImageData );
 
-      if(redImageData.isUpdated) {
-        for (int i = 0; i < redImageData.length; i++) {
-          Serial.print(redImageData.data[i], HEX);
-          Serial.print(' '); // Add a space to separate the values
-        }
-      }
-
-      // do png work here
-
-      if(blackImageData.isUpdated) {
-        free(blackImageData.data);
-      }
-      if(redImageData.isUpdated) {
-        free(redImageData.data);
-      }
-      
-      // // Your Domain name with URL path or IP address with path
-      // http.begin(serverPath.c_str());
-      // http.addHeader("If-Modified-Since", modifiedSince );
-      // http.collectHeaders(headerKeys, numberOfHeaders);
-      // int httpResponseCode = http.GET();
-      // Serial.print("status code: ");
-      // Serial.println(httpResponseCode);
-      
-      // for(int i = 0; i< http.headers(); i++){
-      //     Serial.println(http.header(i));
-      // }
-      // UBYTE* imageData;
-      // int imageLength;
-      // bool doUpdate = false;
-      // if (httpResponseCode == 200) {
-      //   doUpdate = true;
-      //   Serial.println("would re-render");
-      //   modifiedSince = http.header("Last-Modified");
-      //   String contentLength = http.header("Content-Length");
-      //   Serial.print("content length:");
-      //   Serial.println(contentLength);
-      //   imageLength = contentLength.toInt();
-      //   imageData = new unsigned char[imageLength];
-      //   for (int i = 0; i< imageLength;i++) {
-      //     imageData[i] = 0;
-      //   }
-      //   readData(&http, imageData, imageLength);
-
-
-      //   unsigned char dataArray[] = {0x12, 0x34, 0xAB, 0xCD};
-      //   for (int i = 0; i < sizeof(dataArray); i++) {
-      //     Serial.print(dataArray[i], HEX);
+      // if(redImageData.isUpdated) {
+      //   for (int i = 0; i < redImageData.length; i++) {
+      //     Serial.print(redImageData.data[i], HEX);
       //     Serial.print(' '); // Add a space to separate the values
       //   }
-      //   for (int i = 0; i < imageLength; i++) {
-      //     Serial.print(imageData[i], HEX);
-      //     Serial.print(' '); // Add a space to separate the values
-      //   }
-      //   Serial.println(' ');
-      //   // for (int i =0;i<imageLength;i++) {
-      //   //   // Serial.write(c2h(imageData[i]));
-
-          
-      //   // }
       // }
-      // // Free resources
-      // http.end();
 
-      Serial.println("heap avail: ");
-      size_t available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+      if(redImageData.isUpdated) {
+      Serial.println("heap avail above red decode: ");
+      available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
       Serial.println(available);
+        redUpng = upng_new_from_bytes(redImageData.data, redImageData.length);
+        if (redUpng != NULL) {
+          // Decode PNG image.
+          upng_decode(redUpng);
+          if (upng_get_error(redUpng) == UPNG_EOK) {
+            Serial.println("UPNG_EOK");
+
+            // debugImageSize(upng); 
+            // const uint8_t *bitmap = upng_get_buffer(upng);  
+          } else {
+            Serial.print("upng_get_error: ");
+            Serial.println(upng_get_error(redUpng));
+            ESP.restart();
+          }
+        }
+        free(redImageData.data);
+        // rd = upng_get_buffer(redUpng);
+        upng_free(redUpng);
+      }
+      
+
+      Serial.println("heap avail at bottom: ");
+      available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+      Serial.println(available);
+
+      if (redImageData.isUpdated || blackImageData.isUpdated) {
+        EPD_7IN5B_V2_Clear();
+        EPD_7IN5B_V2_Display(blk, blk);
+      }
       // if (doUpdate) {
       //   upng_t* upng;
       //   upng = upng_new_from_bytes(imageData, imageLength);

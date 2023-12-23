@@ -210,7 +210,13 @@ void loop()
         }
         free(blackImageData.data);
         blk = upng_get_buffer(blackUpng);
-        // upng_free(blackUpng);
+        Serial.println("heap avail above upng_free black: ");
+        available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+        Serial.println(available);
+        upng_free(blackUpng);
+        Serial.println("heap avail below upng_free black: ");
+        available = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+        Serial.println(available);
       }
 
       Serial.println("heap avail between: ");

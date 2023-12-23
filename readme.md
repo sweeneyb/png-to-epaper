@@ -1,4 +1,5 @@
 Display an image onto e-paper.  This repo expects a server to hold images that are sized to the paper and reports Last-Modified headers (as refreshes take a long time with 3-color paper).
+For a sample server, see https://github.com/sweeneyb/epaper-images.
 
 The use-case is infrequently updating messages to passers-by, info tags for art, QR displays, etc.  Once this works, I'll give the paper+esp32 pair a GUID, and pull images from the server by GUID to individually address them.  This bypasses any difficulty in text/font rendering that the adafruit libraries address.  Links to a test server to come later.
 

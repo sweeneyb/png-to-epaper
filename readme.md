@@ -4,18 +4,14 @@ For a sample server, see https://github.com/sweeneyb/epaper-images.
 The use-case is infrequently updating messages to passers-by, info tags for art, QR displays, etc.  Once this works, I'll give the paper+esp32 pair a GUID, and pull images from the server by GUID to individually address them.  This bypasses any difficulty in text/font rendering that the adafruit libraries address.  Links to a test server to come later.
 
 ## Hardware
-https://www.aliexpress.us/item/3256805623572150.html
+~~https://www.aliexpress.us/item/3256805623572150.html~~
+The board I ordered seems to have been displaced by a cheaper option.  https://www.aliexpress.us/item/2251832767050812.html.  I can't attest that I've verified that board, though.
 https://www.aliexpress.us/item/3256804935498922.html
 
-## Additional software
-https://github.com/lagunax/ESP32-upng - get the .h and .cpp, and add them to the sketch dir.  TBD if I'm going to use those libraries "in prod"
 
 ## Image gen
-I'm using golang or python to generate the images, and currently passing them through imagemagick.
+Use golang's image tools, then a bit of custom processing to get into something like an xbm.  It's really a bit-field (as XBM is a text format that embeds into C code). The greyscaling could also probably be better.
 
-For testing:
-```convert go-black3.png go-black.xbm```
 
-Currently, to reduce the bit depth:
-```convert go-black3.png -colors 2 -depth 1 go-black-reduced3.png```
-todo: figure out how to create low bit depth greyscale pngs in a programming language that can handle fonts.
+## Mentions
+https://github.com/lagunax/ESP32-upng - For a while, I wanted to decode on the embedded system. Turns out, I didn't have enough memory for 2 images.  But I appreciate this library being available.
